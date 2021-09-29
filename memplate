@@ -1,0 +1,123 @@
+#!/usr/bin/env perl
+
+use strict;
+use warnings;
+use autodie;
+use Getopt::Long 2.49 qw(:config auto_help);
+
+GetOptions ()
+  or die "Could not parse options\n";
+
+=pod
+
+=head1 NAME
+
+memplate - command line tool for (code) templating.
+
+=cut
+
+=head1 SYNOPSIS
+
+memplate
+[alias]
+
+=cut
+
+=head1 DESCRIPTION
+
+Memplate is a command line tool for templating.
+
+It introduces a minimal syntax and has sane defaults that make weaving code
+easier by respecting code indentation.
+
+=cut
+
+=head1 EXAMPLES
+
+Defining the alias will store the stdin to that alias.
+
+    echo hello | memplate hello
+    echo world | memplate world
+
+The template is rendered when the alias is not defined.
+
+    echo '<hello
+    <world' | memplate
+
+The rendered result:
+
+    hello
+    world
+
+=head1 ISSUES
+
+Some known issues are:
+
+=over
+
+=item
+
+Does not support escaping the `<` yet.
+
+=item
+
+Does not allow changing the `<` prefix. This might be convenient when working with certain languages like HTML.
+
+=back
+
+Unknown issues and bugs can be reported over at
+https://github.com/bas080/memplate/issues.
+
+=head1 AUTHOR
+
+Written by Bassim Huis.
+
+=cut
+
+my $tmp_dir="/tmp/memplate";
+
+-e "$tmp_dir" or mkdir $tmp_dir;
+
+if (exists($ENV{'SCOPE'})) {
+  -e "$tmp_dir/$ENV{'SCOPE'}" or mkdir "$tmp_dir/$ENV{'SCOPE'}";
+}
+
+sub alias_file_path {
+  my $alias = trim(shift);
+
+  if (exists($ENV{'SCOPE'})) {
+    return "$tmp_dir/$ENV{'SCOPE'}/$alias";
+  }
+
+  return "/$tmp_dir/$alias";
+}
+
+if ($ARGV[0]) {
+  open my $fh, '>', alias_file_path($ARGV[0]);
+  print $fh <STDIN>;
+  exit;
+}
+
+sub trim { my $s = shift; $s =~ s/^\s+|\s+$//g; return $s };
+
+sub weave {
+  my ($prepend, $fh) = @_;
+
+  while (my $line = <$fh>) {
+    chomp($line);
+
+    my @spl = split(/(?<!\\)\</, $line);
+
+    if (exists($spl[1])) {
+      open my $fhn, '<', alias_file_path($spl[1]);
+      weave($prepend . $spl[0], $fhn);
+      next;
+    }
+
+    print $prepend . $line . "\n";
+  }
+
+  close $fh;
+}
+
+weave("", \*STDIN);
