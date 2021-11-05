@@ -49,15 +49,15 @@ The rendered result:
     hello
     world
 
+You can escape the B<E<lt>> by escaping it with B<\>:
+
+    \<body>
+
+    <body>
+
 =head1 ISSUES
 
-Some known issues are:
-
 =over
-
-=item
-
-Does not support escaping the `<` yet.
 
 =item
 
@@ -114,6 +114,7 @@ sub weave {
       next;
     }
 
+    $line =~ s/\\\</\</g;
     print $prepend . $line . "\n";
   }
 

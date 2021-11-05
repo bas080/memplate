@@ -26,11 +26,13 @@ EXAMPLES
         hello
         world
 
+    You can escape the < by escaping it with \:
+
+        \<body>
+
+        <body>
+
 ISSUES
-    Some known issues are:
-
-    *   Does not support escaping the `<` yet.
-
     *   Does not allow changing the `<` prefix. This might be convenient
         when working with certain languages like HTML.
 
